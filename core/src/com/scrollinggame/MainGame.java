@@ -1,4 +1,4 @@
-package com.scrolling.game;
+package com.scrollinggame;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;

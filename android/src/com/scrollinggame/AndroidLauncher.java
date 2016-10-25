@@ -1,10 +1,10 @@
-package com.scrolling.game;
+package com.scrollinggame;
 
 import android.os.Bundle;
 
 import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration;
-import com.scrolling.game.MainGame;
+import com.scrollinggame.MainGame;
 
 public class AndroidLauncher extends AndroidApplication {
 	@Override

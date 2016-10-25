@@ -1,8 +1,8 @@
-package com.scrolling.game.desktop;
+package com.scrollinggame.desktop;
 
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
-import com.scrolling.game.MainGame;
+import com.scrollinggame.MainGame;
 
 public class DesktopLauncher {
 	public static void main (String[] arg) {

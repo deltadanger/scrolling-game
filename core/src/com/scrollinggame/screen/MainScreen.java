@@ -1,12 +1,19 @@
 package com.scrollinggame.screen;
 
 
-import objects.Point;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 
-import helper.AssetLoader;
+import objects.Point;
+import objects.Shape;
+import objects.ShapeFactory;
+import objects.ShapeMatrix;
+import objects.shape.Circle;
+import objects.shape.Square;
+import objects.shape.Triangle;
 
 
 public class MainScreen extends DefaultScreen{
@@ -21,11 +28,23 @@ public class MainScreen extends DefaultScreen{
 	private int baseSpeed;
 	private Point currentSpeed = new Point();
 	
+	private ShapeMatrix matrix;
+	private ShapeFactory shapeFactory;
+	
 	public MainScreen() {
 		objectSize = 50;
 		padding = 30;
 		decelerating_factor = 2000;
 		baseSpeed = 500;
+		
+		List<Class<? extends Shape>> shapes = new ArrayList<Class<? extends Shape>>();
+		shapes.add(Circle.class);
+		shapes.add(Square.class);
+		shapes.add(Triangle.class);
+		shapeFactory = new ShapeFactory(shapes, ShapeFactory.Mode.RANDOM);
+
+		matrix = new ShapeMatrix();
+		initialiseMatrix();
 	}
 	
 	@Override
@@ -43,21 +62,55 @@ public class MainScreen extends DefaultScreen{
 			double speedReduction = decelerating_factor * delta;
 			currentSpeed.reduceToZero(speedReduction);
 		}
+
 		
-		double startX = (drawStart.x - (int)(drawStart.x / (objectSize+padding) + 1) * (objectSize+padding));
+		double x = (drawStart.x - (int)(drawStart.x / (objectSize+padding) + 1) * (objectSize+padding));
 		double startY = (drawStart.y - (int)(drawStart.y / (objectSize+padding) + 1) * (objectSize+padding));
-		float endX = Gdx.graphics.getWidth() + objectSize;
-		float endY = Gdx.graphics.getHeight() + objectSize;
+		double y = startY;
 		
-		for (double x=startX; x < endX; x += objectSize+padding) {
-			for (double y=startY; y < endY; y += objectSize+padding) {
-				drawShape(x, y);
+		for (int i=0; i<matrix.getWidth(); i++) {
+			for (int j=0; j<matrix.getHeight(); j++) {
+				
+				matrix.get(i, j).draw((float) x, (float) y, objectSize);
+				
+				y += objectSize+padding;
 			}
+			x += objectSize+padding;
+			y = startY;
 		}
 		
         batcher.end();
 	}
 	
+	private void initialiseMatrix() {
+
+		int matrixWidth = Gdx.graphics.getWidth() / (objectSize+padding) + 2;
+		int matrixHeight = Gdx.graphics.getHeight() / (objectSize+padding) + 2;
+		
+		
+		int newHeight = matrix.getHeight();
+		if (newHeight == 0) {
+			newHeight = matrixHeight;
+		}
+		while (matrix.getWidth() < matrixWidth) {
+			matrix.appendCol(shapeFactory.getShapeList(newHeight));
+		}
+		while (matrix.getWidth() > matrixWidth) {
+			matrix.removeLastCol();
+		}
+
+		int newWidth = matrix.getWidth();
+		if (newWidth == 0) {
+			newWidth = matrixWidth;
+		}
+		while (matrix.getHeight() < matrixHeight) {
+			matrix.appendRow(shapeFactory.getShapeList(newWidth));
+		}
+		while (matrix.getHeight() > matrixHeight) {
+			matrix.removeLastRow();
+		}
+	}
+
 	@Override
 	public boolean touchDown(int screenX, int screenY, int pointer, int button) {
 		touchStart = new Point(screenX, screenY);
@@ -91,9 +144,5 @@ public class MainScreen extends DefaultScreen{
 		drawOffset = new Point();
 		isDragging = false;
 		return false;
-	}
-	
-	private void drawShape(double x, double y) {
-		batcher.draw(AssetLoader.pixel, (float) x - objectSize/2, (float) y - objectSize/2, objectSize, objectSize);
 	}
 }

@@ -6,8 +6,8 @@ import java.util.List;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.math.Vector2;
 
-import objects.Point;
 import objects.Shape;
 import objects.ShapeFactory;
 import objects.ShapeMatrix;
@@ -17,25 +17,34 @@ import objects.shape.Triangle;
 
 
 public class MainScreen extends DefaultScreen{
-	private Point touchStart;
-	private Point drawStart;
-	private Point drawOffset = new Point();
+	private static final float PAGE_SCROLL_DURATION = 0.7f; // Seconds
+	private static final float FULL_SCROLL_DURATION = 2f; // Seconds
+	
+	private Vector2 mousePos;
+	private Vector2 oldMousePos;
+	private Vector2 touchStart;
+	private Vector2 drawStart;
 	private boolean isDragging = false;
 	
 	private int objectSize;
 	private int padding;
-	private double decelerating_factor;
+	private int sizeWithPadding;
 	private int baseSpeed;
-	private Point currentSpeed = new Point();
+	private double decelerating_factor;
+	private Vector2 currentSpeed = new Vector2();
 	
 	private ShapeMatrix matrix;
 	private ShapeFactory shapeFactory;
+	private boolean pageScroll;
 	
 	public MainScreen() {
 		objectSize = 50;
 		padding = 30;
-		decelerating_factor = 2000;
-		baseSpeed = 500;
+		pageScroll = true;
+//		pageScroll = false;
+		baseSpeed = 80;
+		
+		sizeWithPadding = objectSize + padding;
 		
 		List<Class<? extends Shape>> shapes = new ArrayList<Class<? extends Shape>>();
 		shapes.add(Circle.class);
@@ -45,48 +54,45 @@ public class MainScreen extends DefaultScreen{
 
 		matrix = new ShapeMatrix();
 		initialiseMatrix();
+
+		drawStart = new Vector2();
 	}
 	
 	@Override
 	public void render(float delta) {
 		initBatcher();
 		
-		batcher.setColor(Color.WHITE);
-		
-		drawStart = new Point(Gdx.graphics.getWidth()/2, Gdx.graphics.getHeight()/2);
-		
 		if (isDragging) {
-			drawStart.add(drawOffset);
+			drawStart.add(mousePos.cpy().sub(oldMousePos));
+			oldMousePos = mousePos.cpy();
 		} else {
 			drawStart.sub(currentSpeed);
-			double speedReduction = decelerating_factor * delta;
-			currentSpeed.reduceToZero(speedReduction);
+			decelerate(delta);
 		}
-
 		
-		double x = (drawStart.x - (int)(drawStart.x / (objectSize+padding) + 1) * (objectSize+padding));
-		double startY = (drawStart.y - (int)(drawStart.y / (objectSize+padding) + 1) * (objectSize+padding));
-		double y = startY;
+		updateMatrixAndDrawPosition();
+
+		double x = drawStart.x;
+		double y = drawStart.y;
 		
 		for (int i=0; i<matrix.getWidth(); i++) {
 			for (int j=0; j<matrix.getHeight(); j++) {
 				
 				matrix.get(i, j).draw((float) x, (float) y, objectSize);
 				
-				y += objectSize+padding;
+				y += sizeWithPadding;
 			}
-			x += objectSize+padding;
-			y = startY;
+			x += sizeWithPadding;
+			y = drawStart.y;
 		}
 		
         batcher.end();
 	}
-	
-	private void initialiseMatrix() {
 
-		int matrixWidth = Gdx.graphics.getWidth() / (objectSize+padding) + 2;
-		int matrixHeight = Gdx.graphics.getHeight() / (objectSize+padding) + 2;
-		
+
+	private void initialiseMatrix() {
+		int matrixWidth = Gdx.graphics.getWidth() / sizeWithPadding + 2;
+		int matrixHeight = Gdx.graphics.getHeight() / sizeWithPadding + 2;
 		
 		int newHeight = matrix.getHeight();
 		if (newHeight == 0) {
@@ -110,29 +116,76 @@ public class MainScreen extends DefaultScreen{
 			matrix.removeLastRow();
 		}
 	}
+	
+	private void updateMatrixAndDrawPosition() {
+		while (drawStart.x < -sizeWithPadding) {
+			drawStart.x += sizeWithPadding;
+			matrix.removeFirstCol();
+			matrix.appendCol(shapeFactory.getShapeList(matrix.getHeight()));
+		}
+		
+		while (drawStart.x > 0) {
+			drawStart.x -= sizeWithPadding;
+			matrix.removeLastCol();
+			matrix.prependCol(shapeFactory.getShapeList(matrix.getHeight()));
+		}
+		
+		while (drawStart.y < -sizeWithPadding) {
+			drawStart.y += sizeWithPadding;
+			matrix.removeFirstRow();
+			matrix.appendRow(shapeFactory.getShapeList(matrix.getWidth()));
+		}
+		
+		while (drawStart.y > 0) {
+			drawStart.y -= sizeWithPadding;
+			matrix.removeLastRow();
+			matrix.prependRow(shapeFactory.getShapeList(matrix.getWidth()));
+		}
+	}
+
+	private void decelerate(float delta) {
+		double speedReduction = decelerating_factor * delta;
+		int xSign = currentSpeed.x > 0 ? 1 : -1;
+		int ySign = currentSpeed.y > 0 ? 1 : -1;
+		currentSpeed.x = (float) (xSign * Math.max(0, Math.abs(currentSpeed.x) - speedReduction));
+		currentSpeed.y = (float) (ySign * Math.max(0, Math.abs(currentSpeed.y) - speedReduction));
+	}
 
 	@Override
-	public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-		touchStart = new Point(screenX, screenY);
+	public boolean touchDown(int screenX, int screenY, int Vector2er, int button) {
+		touchStart = new Vector2(screenX, screenY);
+		
+		mousePos = new Vector2(screenX, -screenY);
+		oldMousePos = mousePos.cpy();
+		
 		isDragging = true;
-		return false;
+		return true;
 	}
 	
 	@Override
-	public boolean touchDragged(int screenX, int screenY, int pointer) {
-		drawOffset = new Point(screenX - touchStart.x, screenY - touchStart.y);
+	public boolean touchDragged(int screenX, int screenY, int Vector2er) {
+		mousePos = new Vector2(screenX, -screenY);
+		
+		Vector2 drawOffset = new Vector2(touchStart.x - screenX, screenY - touchStart.y);
+		
+		float newSpeed = drawOffset.dst(0, 0);
+		decelerating_factor = newSpeed  / FULL_SCROLL_DURATION;
+		if (pageScroll) {
+			newSpeed = baseSpeed;
+			decelerating_factor = baseSpeed / PAGE_SCROLL_DURATION;
+		}
 		
 		if (Math.abs(drawOffset.x) > Math.abs(drawOffset.y)) {
 			if (drawOffset.x > 0) {
-				currentSpeed = new Point(baseSpeed, 0);
+				currentSpeed = new Vector2(newSpeed, 0);
 			} else {
-				currentSpeed = new Point(-baseSpeed, 0);
+				currentSpeed = new Vector2(-newSpeed, 0);
 			}
 		} else {
 			if (drawOffset.y > 0) {
-				currentSpeed = new Point(0, baseSpeed);
+				currentSpeed = new Vector2(0, newSpeed);
 			} else {
-				currentSpeed = new Point(0, -baseSpeed);
+				currentSpeed = new Vector2(0, -newSpeed);
 			}
 		}
 		
@@ -140,8 +193,7 @@ public class MainScreen extends DefaultScreen{
 	}
 	
 	@Override
-	public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-		drawOffset = new Point();
+	public boolean touchUp(int screenX, int screenY, int Vector2er, int button) {
 		isDragging = false;
 		return false;
 	}

@@ -1,19 +1,12 @@
 package com.scrollinggame.screen;
 
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Vector2;
 
-import objects.Shape;
 import objects.ShapeFactory;
 import objects.ShapeMatrix;
-import objects.shape.Circle;
-import objects.shape.Square;
-import objects.shape.Triangle;
+import preferences.Preferences;
 
 
 public class MainScreen extends DefaultScreen{
@@ -29,28 +22,25 @@ public class MainScreen extends DefaultScreen{
 	private int objectSize;
 	private int padding;
 	private int sizeWithPadding;
+	private boolean pageScroll;
+	
 	private int baseSpeed;
 	private double decelerating_factor;
 	private Vector2 currentSpeed = new Vector2();
 	
 	private ShapeMatrix matrix;
 	private ShapeFactory shapeFactory;
-	private boolean pageScroll;
 	
 	public MainScreen() {
-		objectSize = 50;
-		padding = 30;
-		pageScroll = true;
+		Preferences prefs = Preferences.load();
+		objectSize = prefs.objectSize;
+		padding = prefs.padding;
+		pageScroll = prefs.pageScroll;
 //		pageScroll = false;
 		baseSpeed = 80;
 		
 		sizeWithPadding = objectSize + padding;
-		
-		List<Class<? extends Shape>> shapes = new ArrayList<Class<? extends Shape>>();
-		shapes.add(Circle.class);
-		shapes.add(Square.class);
-		shapes.add(Triangle.class);
-		shapeFactory = new ShapeFactory(shapes, ShapeFactory.Mode.RANDOM);
+		shapeFactory = new ShapeFactory(prefs.shapes, prefs.colors, ShapeFactory.Mode.RANDOM);
 
 		matrix = new ShapeMatrix();
 		initialiseMatrix();

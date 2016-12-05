@@ -1,4 +1,4 @@
-package objects;
+package com.scrollinggame.objects;
 
 import com.badlogic.gdx.graphics.Color;
 

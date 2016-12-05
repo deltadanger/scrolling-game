@@ -1,11 +1,10 @@
 package com.scrollinggame;
 
-import helper.AssetLoader;
-import helper.I18n;
-
 import com.badlogic.gdx.Application;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
+import com.scrollinggame.helper.AssetLoader;
+import com.scrollinggame.helper.I18n;
 import com.scrollinggame.screen.MainScreen;
 
 public class MainGame extends Game {

@@ -3,10 +3,9 @@ package com.scrollinggame.screen;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Vector2;
-
-import objects.ShapeFactory;
-import objects.ShapeMatrix;
-import preferences.Preferences;
+import com.scrollinggame.objects.ShapeFactory;
+import com.scrollinggame.objects.ShapeMatrix;
+import com.scrollinggame.preferences.Preferences;
 
 
 public class MainScreen extends DefaultScreen{

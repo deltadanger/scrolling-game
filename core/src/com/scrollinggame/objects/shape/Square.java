@@ -1,9 +1,8 @@
-package objects.shape;
+package com.scrollinggame.objects.shape;
 
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
-
-import objects.Shape;
+import com.scrollinggame.objects.Shape;
 
 public class Square extends Shape {
 

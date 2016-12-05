@@ -1,4 +1,4 @@
-package objects;
+package com.scrollinggame.objects;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -6,8 +6,6 @@ import java.util.List;
 import java.util.Random;
 
 import com.badlogic.gdx.graphics.Color;
-
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 public class ShapeFactory {
 	

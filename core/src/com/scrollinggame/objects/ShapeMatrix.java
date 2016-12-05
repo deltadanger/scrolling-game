@@ -1,4 +1,4 @@
-package objects;
+package com.scrollinggame.objects;
 
 import java.util.ArrayList;
 import java.util.List;

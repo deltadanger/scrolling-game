@@ -7,8 +7,12 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.scrollinggame.objects.Shape;
 import com.scrollinggame.objects.shape.Circle;
+import com.scrollinggame.objects.shape.Cross;
+import com.scrollinggame.objects.shape.Diamond;
 import com.scrollinggame.objects.shape.Square;
+import com.scrollinggame.objects.shape.Star;
 import com.scrollinggame.objects.shape.Triangle;
+import com.scrollinggame.objects.shape.TriangleReversed;
 
 public class Preferences {
 	
@@ -30,6 +34,10 @@ public class Preferences {
 			this.add(Circle.class);
 			this.add(Square.class);
 			this.add(Triangle.class);
+			this.add(TriangleReversed.class);
+			this.add(Cross.class);
+			this.add(Star.class);
+			this.add(Diamond.class);
 		}
 	};
 	
@@ -42,13 +50,13 @@ public class Preferences {
 			this.add(Color.RED);
 			this.add(Color.CYAN);
 			this.add(Color.GREEN);
-			this.add(Color.GRAY);
+//			this.add(Color.GRAY);
 			this.add(Color.MAGENTA);
 			this.add(Color.ORANGE);
 			this.add(Color.LIME);
 			this.add(Color.PINK);
 			this.add(Color.PURPLE);
-			this.add(Color.TEAL);
+//			this.add(Color.TEAL);
 			this.add(Color.YELLOW);
 		}
 	};

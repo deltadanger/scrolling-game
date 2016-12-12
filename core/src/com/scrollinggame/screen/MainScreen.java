@@ -11,6 +11,7 @@ import com.scrollinggame.preferences.Preferences;
 public class MainScreen extends DefaultScreen{
 	private static final float PAGE_SCROLL_DURATION = 0.7f; // Seconds
 	private static final float FULL_SCROLL_DURATION = 2f; // Seconds
+	private static final float PAGE_SCROLL_SPEED_SIZE_FACTOR = 0.1f;
 	
 	private Vector2 mousePos;
 	private Vector2 oldMousePos;
@@ -23,8 +24,7 @@ public class MainScreen extends DefaultScreen{
 	private int sizeWithPadding;
 	private boolean pageScroll;
 	
-	private int baseSpeed;
-	private double decelerating_factor;
+	private double deceleratingFactor;
 	private Vector2 currentSpeed = new Vector2();
 	
 	private ShapeMatrix matrix;
@@ -35,8 +35,6 @@ public class MainScreen extends DefaultScreen{
 		objectSize = prefs.objectSize;
 		padding = prefs.padding;
 		pageScroll = prefs.pageScroll;
-//		pageScroll = false;
-		baseSpeed = 80;
 		
 		sizeWithPadding = objectSize + padding;
 		shapeFactory = new ShapeFactory(prefs.shapes, prefs.colors, ShapeFactory.Mode.RANDOM);
@@ -133,7 +131,7 @@ public class MainScreen extends DefaultScreen{
 	}
 
 	private void decelerate(float delta) {
-		double speedReduction = decelerating_factor * delta;
+		double speedReduction = deceleratingFactor * delta;
 		int xSign = currentSpeed.x > 0 ? 1 : -1;
 		int ySign = currentSpeed.y > 0 ? 1 : -1;
 		currentSpeed.x = (float) (xSign * Math.max(0, Math.abs(currentSpeed.x) - speedReduction));
@@ -157,25 +155,21 @@ public class MainScreen extends DefaultScreen{
 		
 		Vector2 drawOffset = new Vector2(touchStart.x - screenX, screenY - touchStart.y);
 		
-		float newSpeed = drawOffset.dst(0, 0);
-		decelerating_factor = newSpeed  / FULL_SCROLL_DURATION;
+		Vector2 newSpeed = drawOffset.cpy();
+		float deceleratingDuration = FULL_SCROLL_DURATION;
 		if (pageScroll) {
-			newSpeed = baseSpeed;
-			decelerating_factor = baseSpeed / PAGE_SCROLL_DURATION;
+			int speedXsign = drawOffset.x > 0 ? 1 : -1;
+			int speedYsign = drawOffset.y > 0 ? 1 : -1;
+			newSpeed = new Vector2(speedXsign * Gdx.graphics.getWidth() * PAGE_SCROLL_SPEED_SIZE_FACTOR, speedYsign * Gdx.graphics.getHeight() * PAGE_SCROLL_SPEED_SIZE_FACTOR);
+			deceleratingDuration = PAGE_SCROLL_DURATION;
 		}
 		
 		if (Math.abs(drawOffset.x) > Math.abs(drawOffset.y)) {
-			if (drawOffset.x > 0) {
-				currentSpeed = new Vector2(newSpeed, 0);
-			} else {
-				currentSpeed = new Vector2(-newSpeed, 0);
-			}
+			currentSpeed = new Vector2(newSpeed.x, 0);
+			deceleratingFactor = Math.abs(newSpeed.x) / deceleratingDuration;
 		} else {
-			if (drawOffset.y > 0) {
-				currentSpeed = new Vector2(0, newSpeed);
-			} else {
-				currentSpeed = new Vector2(0, -newSpeed);
-			}
+			currentSpeed = new Vector2(0, newSpeed.y);
+			deceleratingFactor = Math.abs(newSpeed.y) / deceleratingDuration;
 		}
 		
 		return false;
